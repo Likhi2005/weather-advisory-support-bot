@@ -1,6 +1,11 @@
+from fastapi import FastAPI
+app = FastAPI(title="Weather Advisory Support Bot")
+
+
+@app.get("/")
 def main():
-    print("Hello from backend!")
+    return {"message": "Welcome to the Weather Advisory Support Bot!"}
 
-
-if __name__ == "__main__":
-    main()
+@app.get("/health")
+def health():
+    return {"status": "healthy"}
