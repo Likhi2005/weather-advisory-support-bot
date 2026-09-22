@@ -22,13 +22,14 @@ rules:
       activity:
         in: [running, cycling, hiking, outdoor_exercise]
     severity: high
-    guidance: "Avoid cycling because heavy rain may cause accidents and reduce visibility."
+    guidance: >
+      Avoid outdoor activities during high UV index hours (10:00 AM to 4:00 PM) as it can lead to sunburn and other health issues. Consider exercising in the early morning or late evening when the UV index is lower.
   
   - id: SOP-03
     category: outdoor_activity
     name: Extreme Heat Exercise
     conditions:
-      temperature_celsius:
+      temperature_c:
         greater_than: 40
       activity:
         in: [running, cycling, hiking, outdoor_exercise]
