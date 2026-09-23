@@ -72,7 +72,7 @@ A weather safety chatbot built with **LangGraph** that uses live weather data, l
                          └───────────────┘
 ```
 ## prview
-<img width="719" height="705" alt="image" src="https://github.com/user-attachments/assets/be8b6833-4947-4247-a268-8713937fa833" />
+![Application Preview](application_view.png)
 
 
 ### Workflow
