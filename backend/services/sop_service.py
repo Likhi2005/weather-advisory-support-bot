@@ -18,11 +18,15 @@ class SOPService:
         return self.rules
 
     def evaluate_rule(self, weather: dict, intent: dict):
+        matched_rules = []
 
         current = weather.get("current", {})
         hourly = weather.get("hourly", {})
 
-        data = {
+        # -----------------------------
+        # Normalize current weather
+        # -----------------------------
+        normalized_weather = {
             "wind_speed_kmh": current.get("wind_speed_10m"),
             "temperature_c": current.get("temperature_2m"),
             "precipitation_probability": current.get(
@@ -31,57 +35,81 @@ class SOPService:
             "weather_code": current.get("weather_code"),
         }
 
+        # -----------------------------
+        # Get UV data
+        # -----------------------------
         times = hourly.get("time", [])
         uv_values = hourly.get("uv_index", [])
-        current_time = current.get("time")
 
-        if times and uv_values and current_time:
-            try:
-                current_dt = datetime.fromisoformat(current_time)
+        if uv_values and times:
+            current_time = current.get("time")
+            requested_time = intent.get("time")
 
-                index = min(
-                    range(min(len(times), len(uv_values))),
-                    key=lambda i: abs(
-                        datetime.fromisoformat(times[i]) - current_dt
+            # User asked about TODAY
+            if requested_time == "today" and current_time:
+                current_date = current_time[:10]
+
+                today_uv = [
+                    uv
+                    for time, uv in zip(times, uv_values)
+                    if time.startswith(current_date)
+                ]
+
+                if today_uv:
+                    # For "today", use the maximum UV
+                    normalized_weather["uv_index"] = max(today_uv)
+
+            # For requests without "today",
+            # use the UV closest to current time
+            elif current_time:
+                try:
+                    current_dt = datetime.fromisoformat(current_time)
+
+                    closest_index = min(
+                        range(len(times)),
+                        key=lambda i: abs(
+                            datetime.fromisoformat(times[i])
+                            - current_dt
+                        ),
                     )
-                )
 
-                data["uv_index"] = uv_values[index]
+                    normalized_weather["uv_index"] = uv_values[
+                        closest_index
+                    ]
 
-            except (ValueError, TypeError):
-                data["uv_index"] = None
+                except (ValueError, TypeError):
+                    pass
 
-        if current_time:
-            try:
-                data["time"] = datetime.fromisoformat(
-                    current_time
-                ).strftime("%H:%M")
-            except (ValueError, TypeError):
-                data["time"] = None
-
-        data["thunderstorm"] = self._is_thunderstorm(
-            data.get("weather_code")
+        # -----------------------------
+        # Thunderstorm detection
+        # -----------------------------
+        normalized_weather["thunderstorm"] = self._is_thunderstorm(
+            normalized_weather.get("weather_code")
         )
 
+        # -----------------------------
+        # Combine weather + user intent
+        # -----------------------------
         context = {
-            **data,
-            **intent
+            **normalized_weather,
+            **intent,
         }
 
         print("SOP CONTEXT:", context)
 
-        matched = []
-
+        # -----------------------------
+        # Evaluate rules
+        # -----------------------------
         for rule in self.rules:
             if self._matches(rule, context):
-                matched.append({
-                    "id": rule.get("id"),
-                    "name": rule.get("name"),
-                    "severity": rule.get("severity"),
-                    "guidance": rule.get("guidance"),
+                matched_rules.append({
+                    "id": rule["id"],
+                    "name": rule["name"],
+                    "severity": rule["severity"],
+                    "guidance": rule["guidance"],
                 })
 
-        return matched
+        return matched_rules
 
     def _is_thunderstorm(self, weather_code):
 
@@ -98,9 +126,11 @@ class SOPService:
 
             value = context.get(key)
 
+            # Required value does not exist
             if value is None:
                 return False
 
+            # greater_than
             if "greater_than" in condition:
                 try:
                     if float(value) <= float(
@@ -110,6 +140,7 @@ class SOPService:
                 except (TypeError, ValueError):
                     return False
 
+            # greater_than_or_equal
             if "greater_than_or_equal" in condition:
                 try:
                     if float(value) < float(
@@ -119,6 +150,7 @@ class SOPService:
                 except (TypeError, ValueError):
                     return False
 
+            # equals
             if "equals" in condition:
 
                 expected = condition["equals"]
@@ -126,6 +158,7 @@ class SOPService:
                 if value != expected:
                     return False
 
+            # in
             if "in" in condition:
 
                 allowed = condition["in"]
@@ -133,12 +166,14 @@ class SOPService:
                 if value not in allowed:
                     return False
 
+            # between
             if "between" in condition:
 
                 start, end = condition["between"]
 
                 try:
                     if isinstance(value, str):
+
                         value_time = datetime.strptime(
                             value,
                             "%H:%M"
@@ -162,6 +197,7 @@ class SOPService:
                             return False
 
                     else:
+
                         if not (
                             float(start)
                             <= float(value)

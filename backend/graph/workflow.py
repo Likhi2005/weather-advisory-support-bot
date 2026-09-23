@@ -26,11 +26,7 @@ def route_after_tools(state: AgentState):
     if state.get("error"):
         return "weather_failed"
 
-    if not state.get("matched_sops"):
-        return "no_sop"
-
     return "generate_response"
-
 
 def build_graph():
     graph = StateGraph(AgentState)
@@ -41,7 +37,7 @@ def build_graph():
     graph.add_node("generate_response", generate_response)
 
     graph.add_node("weather_failed", weather_failed)
-    graph.add_node("no_sop", no_sop)
+    # graph.add_node("no_sop", no_sop)
 
     graph.add_edge(START, "understand_query")
 
@@ -64,13 +60,12 @@ def build_graph():
         route_after_tools,
         {
             "weather_failed": "weather_failed",
-            "no_sop": "no_sop",
             "generate_response": "generate_response"
         }
     )
 
     graph.add_edge("generate_response", END)
     graph.add_edge("weather_failed", END)
-    graph.add_edge("no_sop", END)
+    # graph.add_edge("no_sop", END)
 
     return graph.compile()

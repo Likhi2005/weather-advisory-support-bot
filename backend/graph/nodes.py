@@ -133,7 +133,7 @@ def evaluate_tools(state: AgentState):
 
     print("WEATHER:", weather_result)
 
-    if "error" in weather_result:
+    if isinstance(weather_result, dict) and weather_result.get("error"):
         return {
             "error": weather_result["error"]
         }
@@ -145,7 +145,7 @@ def evaluate_tools(state: AgentState):
 
     print("SOP RESULT:", sop_result)
 
-    if isinstance(sop_result, dict) and "error" in sop_result:
+    if isinstance(sop_result, dict) and sop_result.get("error"):
         return {
             "error": sop_result["error"]
         }
@@ -155,36 +155,88 @@ def evaluate_tools(state: AgentState):
         "matched_sops": sop_result
     }
 
-
 def generate_response(state: AgentState):
     user_query = state.get("user_query", "")
     weather = state.get("weather", {})
     matched_sops = state.get("matched_sops", [])
+    intent = state.get("intent", {})
+
+    current = weather.get("current", {})
+
+    activity = intent.get("activity")
+    location = intent.get("location")
+    requested_time = intent.get("time")
 
     prompt = f"""
-You are the response generation component of a weather safety advisory system.
+    You are the final decision-support component of a weather
+    safety advisory system.
 
-Generate a concise answer to the user's question.
+    The user asked:
 
-Strict rules:
+    {user_query}
 
-- Use ONLY the weather data provided below.
-- Never invent or estimate weather values.
-- Use ONLY the guidance from the matched SOPs.
-- Do not create your own safety advice.
-- Always mention the SOP ID when an SOP applies.
-- Explain the recommendation naturally.
-- Do not claim that a policy exists when it does not.
+    USER CONTEXT:
+    - Activity: {activity}
+    - Location: {location}
+    - Requested time: {requested_time}
 
-User question:
-{user_query}
+    CURRENT WEATHER:
+    - Temperature: {current.get("temperature_2m")} °C
+    - Wind speed: {current.get("wind_speed_10m")} km/h
+    - Precipitation probability: {current.get("precipitation_probability")}%
+    - Weather code: {current.get("weather_code")}
 
-Actual weather data:
-{weather}
+    CONFIGURED SOP SIGNALS:
+    {matched_sops}
 
-Matched SOPs:
-{matched_sops}
-"""
+    Your job is to give the user a practical weather-based response.
+
+    IMPORTANT:
+
+    1. The activity is the MAIN context.
+    Evaluate the weather specifically in relation to that activity.
+
+    2. SOPs are SAFETY SIGNALS, not the complete decision.
+    If an SOP matches, take its severity and guidance seriously
+    and use it in your response.
+
+    3. If NO SOP matches, do NOT say:
+    "Weather data is unavailable."
+    
+    The weather data IS available.
+
+    4. If no SOP matches, use the actual weather values and your
+    general weather reasoning to explain the conditions for the
+    requested activity.
+
+    5. Do not invent weather values.
+
+    6. Do not invent SOPs or pretend that an SOP matched.
+
+    7. Do not create specific safety thresholds that are not present
+    in the SOPs or weather data.
+
+    8. You may make a practical recommendation based on the overall
+    weather conditions, but clearly base it on the provided data.
+
+    9. If an SOP matches, mention the SOP ID and explain its warning.
+
+    10. If conditions appear generally suitable and there is no
+        matching warning, you can say that the conditions appear
+        suitable for the requested activity, while avoiding a
+        guarantee of safety.
+
+    11. Keep the response concise and natural.
+
+    Think about:
+    - What activity did the user ask about?
+    - What are the actual weather conditions?
+    - Did any configured safety warning trigger?
+    - What does that mean specifically for this activity?
+    - What should the user understand from these conditions?
+
+    Return only the final response.
+    """
 
     result = llm.invoke(prompt)
 
