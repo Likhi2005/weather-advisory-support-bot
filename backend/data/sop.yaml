@@ -1,30 +1,38 @@
 rules:
   - id: SOP-01
     category: outdoor_activity
-    name: Strong wind Outdoor activity
+    name: Strong Wind Outdoor Activity
     conditions:
       wind_speed_kmh:
         greater_than: 40
       activity:
-        in: [cycling, running, hiking, walking]
+        in:
+          - cycling
+          - running
+          - hiking
+          - walking
     severity: high
     guidance: >
-      Avoid outdoor activities in strong winds as they can create a life-threatening situation.
-  
+      Avoid outdoor activities in strong winds as they can create
+      unsafe conditions.
+
   - id: SOP-02
     category: outdoor_activity
-    name: High uv exercise
+    name: High UV Outdoor Activity
     conditions:
       uv_index:
         greater_than: 8
-      time:
-        between: [10:00, 16:00]
       activity:
-        in: [running, cycling, hiking, outdoor_exercise]
+        in:
+          - running
+          - cycling
+          - hiking
+          - outdoor_exercise
     severity: high
     guidance: >
-      Avoid outdoor activities during high UV index hours (10:00 AM to 4:00 PM) as it can lead to sunburn and other health issues. Consider exercising in the early morning or late evening when the UV index is lower.
-  
+      Avoid outdoor activities during periods of high UV index.
+      Consider exercising when the UV index is lower.
+
   - id: SOP-03
     category: outdoor_activity
     name: Extreme Heat Exercise
@@ -32,10 +40,16 @@ rules:
       temperature_c:
         greater_than: 40
       activity:
-        in: [running, cycling, hiking, outdoor_exercise]
+        in:
+          - running
+          - cycling
+          - hiking
+          - outdoor_exercise
     severity: high
-    guidance: 'Avoid running because extrem heat and dehydration can cause heat stroke and other health issues. And consider running in early morning or lately evening when the temperature is lower'
-  
+    guidance: >
+      Avoid outdoor exercise during extreme heat because it can
+      increase the risk of heat-related illness.
+
   - id: SOP-04
     category: travel
     name: High Rain Travel Risk
@@ -43,11 +57,14 @@ rules:
       precipitation_probability:
         greater_than_or_equal: 70
       intent:
-        in: [travel, commute]
+        in:
+          - travel
+          - commute
     severity: medium
     guidance: >
-      Consider postponing travel or commuting during heavy rain as it may lead to traffic congestion, accidents, and delays. If travel is necessary, ensure to check weather updates and road conditions.
-  
+      Consider postponing travel or commuting during periods of
+      high precipitation probability.
+
   - id: SOP-05
     category: travel
     name: Strong Wind Two-Wheeler Travel
@@ -62,14 +79,15 @@ rules:
     severity: high
     guidance: >
       Strong winds can make two-wheeler travel unsafe.
-      Consider delaying the journey or using an alternative mode
-      of transport.
+      Consider delaying the journey or using an alternative
+      mode of transport.
 
   - id: SOP-06
     category: outdoor_activity
     name: Thunderstorm Outdoor Risk
     conditions:
-      thunderstorm: true
+      thunderstorm:
+        equals: true
       activity:
         in:
           - picnic
@@ -95,6 +113,7 @@ rules:
     guidance: >
       Avoid prolonged outdoor exposure during extreme heat.
       Stay hydrated and prefer a cool indoor environment.
+
   - id: SOP-08
     category: vulnerable_groups
     name: Heavy Rain for Children
@@ -125,58 +144,3 @@ rules:
     guidance: >
       Avoid prolonged outdoor exposure for pets during extreme
       heat and provide access to shade and water.
-
-  - id: SOP-10
-    category: outdoor_activity
-    name: Poor Picnic Conditions
-    conditions:
-      intent: picnic
-      weather_assessment:
-        unfavorable: true
-    severity: low
-    guidance: >
-      Conditions may not be ideal for a picnic. Consider a
-      shorter outdoor activity or rescheduling for a more
-      comfortable period.
-
-  - id: SOP-11
-    category: weather_system
-    name: Active Heavy Rain System
-    conditions:
-      weather_system:
-        type:
-          in:
-            - low_pressure_system
-            - cyclonic_circulation
-        active: true
-      rainfall_intensity:
-        in:
-          - heavy
-          - very_heavy
-      affects_user_location: true
-    severity: high
-    guidance: >
-      An active weather system is bringing heavy rainfall to
-      your location. Treat outdoor activities as high risk and
-      avoid unnecessary outdoor travel or activity. Follow
-      official local weather and emergency alerts.
-
-  - id: SOP-12
-    category: outdoor_activity
-    name: High Rainfall Outdoor Activity
-    conditions:
-      rainfall_intensity:
-        in:
-          - heavy
-          - very_heavy
-      activity:
-        in:
-          - hiking
-          - camping
-          - picnic
-          - outdoor_exercise
-    severity: high
-    guidance: >
-      Heavy rainfall can create unsafe outdoor conditions.
-      Consider postponing the activity and monitor local
-      weather alerts.

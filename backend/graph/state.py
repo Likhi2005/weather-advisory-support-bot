@@ -1,7 +1,7 @@
-from typing import TypedDict
-
-class AgentState(TypedDict):
+from typing import TypedDict, Optional
+class AgentState(TypedDict, total=False):
     user_query: str
+    messages: list
     longitude: float
     latitude: float
     intent: dict
