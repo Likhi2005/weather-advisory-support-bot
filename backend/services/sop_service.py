@@ -1,7 +1,7 @@
 import yaml
 
 class SOPService:
-    def __init__(self, policy_path: str = "backend/data/sop.yaml"):
+    def __init__(self, policy_path: str = "data/sop.yaml"):
         self.policy_path = policy_path
         self.rules = self._load_rules()
         

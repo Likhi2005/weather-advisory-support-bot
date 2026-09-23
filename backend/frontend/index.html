@@ -1,0 +1,250 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weather Advisory Bot</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            min-height: 100vh;
+            background: #f5f7fa;
+            font-family: Arial, Helvetica, sans-serif;
+            color: #1f2937;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 850px;
+            min-height: 100vh;
+            background: #ffffff;
+            display: flex;
+            flex-direction: column;
+            border-left: 1px solid #e5e7eb;
+            border-right: 1px solid #e5e7eb;
+        }
+
+        .header {
+            padding: 24px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            color: #1f3a5f;
+            margin-bottom: 6px;
+        }
+
+        .header p {
+            font-size: 14px;
+            color: #6b7280;
+        }
+
+        .chat {
+            flex: 1;
+            padding: 24px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .message {
+            max-width: 75%;
+            padding: 12px 15px;
+            border-radius: 8px;
+            font-size: 15px;
+            line-height: 1.5;
+            white-space: pre-wrap;
+            overflow-wrap: anywhere;
+        }
+
+        .user-message {
+            align-self: flex-end;
+            background: #1f3a5f;
+            color: #ffffff;
+        }
+
+        .bot-message {
+            align-self: flex-start;
+            background: #eef2f6;
+            color: #1f2937;
+        }
+
+        .error-message {
+            align-self: flex-start;
+            background: #fef2f2;
+            color: #991b1b;
+        }
+
+        .input-area {
+            display: flex;
+            gap: 10px;
+            padding: 16px 24px;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .input-area input {
+            flex: 1;
+            min-width: 0;
+            padding: 12px 14px;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            outline: none;
+            font-size: 15px;
+        }
+
+        .input-area input:focus {
+            border-color: #1f3a5f;
+        }
+
+        .input-area button {
+            padding: 12px 22px;
+            border: none;
+            border-radius: 6px;
+            background: #1f3a5f;
+            color: #ffffff;
+            font-size: 15px;
+            cursor: pointer;
+        }
+
+        .input-area button:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+        }
+
+        @media (max-width: 600px) {
+            .header {
+                padding: 18px;
+            }
+
+            .header h1 {
+                font-size: 20px;
+            }
+
+            .chat {
+                padding: 16px;
+            }
+
+            .message {
+                max-width: 88%;
+                font-size: 14px;
+            }
+
+            .input-area {
+                padding: 12px;
+            }
+
+            .input-area button {
+                padding: 12px 16px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <main class="container">
+
+        <header class="header">
+            <h1>Weather Advisory Bot</h1>
+            <p>Ask about outdoor activities and weather conditions.</p>
+        </header>
+
+        <section id="chat" class="chat"></section>
+
+        <div class="input-area">
+            <input id="message" type="text" placeholder="Ask about weather safety..." autocomplete="off">
+
+            <button id="sendButton" onclick="sendMessage()">
+                Send
+            </button>
+        </div>
+
+    </main>
+
+    <script>
+        const API_URL = "/chat";
+
+        const chat = document.getElementById("chat");
+        const messageInput = document.getElementById("message");
+        const sendButton = document.getElementById("sendButton");
+
+        function addMessage(text, type) {
+            const message = document.createElement("div");
+
+            message.className = "message " + type;
+            message.textContent = text;
+
+            chat.appendChild(message);
+            chat.scrollTop = chat.scrollHeight;
+        }
+
+        async function sendMessage() {
+            const message = messageInput.value.trim();
+
+            if (!message) {
+                return;
+            }
+
+            addMessage(message, "user-message");
+
+            messageInput.value = "";
+            sendButton.disabled = true;
+
+            try {
+                const response = await fetch(API_URL, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        user_query: message
+                    })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(
+                        data.detail || "Request failed"
+                    );
+                }
+
+                addMessage(
+                    data.response || "No response received.",
+                    "bot-message"
+                );
+
+            } catch (error) {
+                addMessage(
+                    "Unable to connect to the weather advisory service.",
+                    "error-message"
+                );
+            } finally {
+                sendButton.disabled = false;
+                messageInput.focus();
+            }
+        }
+
+        messageInput.addEventListener("keydown", function (event) {
+            if (event.key === "Enter") {
+                sendMessage();
+            }
+        });
+    </script>
+
+</body>
+
+</html>
+```
